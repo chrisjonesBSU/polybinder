@@ -59,7 +59,7 @@ class Simulation:
         polybinder.system
     restart : str, default None
         Path to gsd file from which to restart the simulation
-    
+
     Methods
     -------
     quench: Runs a hoomd simulation
@@ -116,7 +116,7 @@ class Simulation:
             self.ref_energy = ref_values["energy"]
             self.ref_distance = ref_values["distance"]
             self.ref_mass = ref_values["mass"]
-        # Non coarse-grained related parameters, system is a pmd.Structure 
+        # Non coarse-grained related parameters, system is a pmd.Structure
         elif isinstance(system.system, pmd.Structure):
             self.system = system.system
             self.cg_system = False
@@ -137,7 +137,7 @@ class Simulation:
                 self.ref_distance = max(pair_coeffs, key=operator.itemgetter(2))[2]
 
         if system.system_type != "interface":
-            # Conv from nm (mBuild) to ang (parmed) and set to reduced length 
+            # Conv from nm (mBuild) to ang (parmed) and set to reduced length
             self.target_box = system.target_box * 10 / self.ref_distance
 
         self.log_quantities = [
@@ -284,7 +284,7 @@ class Simulation:
                 )
 
                 box_updater = hoomd.update.box_resize(
-                    Lx=x_variant, 
+                    Lx=x_variant,
                     Ly=y_variant,
                     Lz=z_variant,
                     period=shrink_period
@@ -325,7 +325,7 @@ class Simulation:
             # Run the primary simulation
             if pressure:
                 try: # Not defined if no shrink step
-                    integrator.disable() 
+                    integrator.disable()
                 except NameError:
                     pass
                 integrator = hoomd.md.integrate.npt(
@@ -337,7 +337,7 @@ class Simulation:
                         )
             elif not pressure:
                 try: # Integrator already created (shrinking), update kT
-                    integrator.set_params(kT=kT) 
+                    integrator.set_params(kT=kT)
                 except NameError: # Integrator not yet created (no shrinking)
                     integrator = hoomd.md.integrate.nvt(
                             group=_all,
@@ -397,11 +397,17 @@ class Simulation:
                     self.ref_energy,
                     self.r_cut,
                     self.auto_scale,
-                    nlist=self.nlist
+                    nlist=self.nlist,
+                    restart=self.restart
                 )
-                init_x = objs[0].box.Lx
-                init_y = objs[0].box.Ly
-                init_z = objs[0].box.Lz
+                if self.restart is None:
+                    init_x = objs[0].box.Lx
+                    init_y = objs[0].box.Ly
+                    init_z = objs[0].box.Lz
+                else:
+                    init_x = objs[0].configuration.box[0]
+                    init_y = objs[0].configuration.box[1]
+                    init_z = objs[0].configuration.box[2]
             elif self.cg_system is True:
                 objs = self._create_hoomd_sim_from_snapshot()
                 self.log_quantities.remove("pair_lj_energy")
@@ -516,9 +522,9 @@ class Simulation:
                             tau=self.tau_kt,
                             kT=1
                     )
-            
-            last_step = shrink_steps 
-            for kT in schedule: 
+
+            last_step = shrink_steps
+            for kT in schedule:
                 n_steps = schedule[kT]
                 integrator.set_params(kT=kT)
                 integrator.randomize_velocities(seed=self.seed)
@@ -529,7 +535,6 @@ class Simulation:
                     last_step += n_steps
                     done = True
                     last_temp = kT
-                    return done, last_temp
                 except hoomd.WalltimeLimitReached:
                     done = False
                     last_temp = kT
@@ -677,11 +682,11 @@ class Simulation:
                     phase=0,
                     dynamic=["momentum"]
             )
-            
+
             # Start simulation run
             adjust_axis = axis_dict[tensile_axis]
             step = 0
-            last_L = init_length 
+            last_L = init_length
             while step < n_steps:
                 try:
                     hoomd.run_upto(step + expand_period)
@@ -692,7 +697,7 @@ class Simulation:
                     for particle in fix_right:
                         particle.position += (adjust_axis * (diff/2))
                     step += expand_period
-                    last_L = current_L 
+                    last_L = current_L
                 except hoomd.WalltimeLimitReached:
                     pass
                 finally:
@@ -738,7 +743,7 @@ class Simulation:
 
         if not all([i == pair_pot_widths[0] for i in pair_pot_widths]):
             raise RuntimeError(
-                "All pair potential files must have the same length"    
+                "All pair potential files must have the same length"
             )
 
         pair_pot = hoomd.md.pair.table(
@@ -748,7 +753,7 @@ class Simulation:
             pair = pair.split("-")
             pair_pot.set_from_file(f"{pair[0]}", f"{pair[1]}", filename=fpath)
 
-        # Repeat same process for Bonds 
+        # Repeat same process for Bonds
         bonds = []
         bond_pot_files = []
         bond_pot_widths = []
@@ -767,14 +772,14 @@ class Simulation:
 
         if not all([i == bond_pot_widths[0] for i in bond_pot_widths]):
             raise RuntimeError(
-                "All bond potential files must have the same length"    
+                "All bond potential files must have the same length"
             )
 
         bond_pot = hoomd.md.bond.table(width=bond_pot_widths[0])
         for bond, fpath in zip(bonds, bond_pot_files):
             bond_pot.set_from_file(f"{bond}", f"{bond_pot_file}")
-        
-        # Repeat same process for Angles 
+
+        # Repeat same process for Angles
         angles = []
         angle_pot_files = []
         angle_pot_widths = []
@@ -793,7 +798,7 @@ class Simulation:
 
         if not all([i == angle_pot_widths[0] for i in angle_pot_widths]):
             raise RuntimeError(
-                "All bond potential files must have the same length"    
+                "All bond potential files must have the same length"
             )
 
         angle_pot = hoomd.md.angle.table(width=angle_pot_widths[0])
@@ -808,7 +813,7 @@ class Simulation:
                 bond_pot,
                 angle_pot,
         ]
-        return hoomd_objs 
+        return hoomd_objs
 
     def _hoomd_walls(self, wall_axis, init_x, init_y, init_z):
         """Create hoomd LJ wall potentials"""
