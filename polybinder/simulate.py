@@ -116,6 +116,9 @@ class Simulation:
         self.wall_time_limit = wall_time_limit
         self.system = system.system
         self.ran_shrink = False
+        self._molecule = system.system_parms.molecule
+        if self._molecule == "PEKK":
+            self._para_weight = system.system_parms.para_weight
 
         # Coarsed-grained related parameters, system is a str (path to a GSD)
         if isinstance(self.system, str):
@@ -642,7 +645,10 @@ class Simulation:
         angle_pot_files = []
         angle_pot_widths = []
         for angle in init_snap.angles.types:
-            fname = f"{angle}_angle.txt"
+            if self._molecule == "PEKK" and angle == "E-K-K":
+                fname = f"{angle}-{self._para_weight}_angle.txt"
+            else:
+                fname = f"{angle}_angle.txt"
             angle_pot_file = f"{self.cg_ff_path}/{fname}"
             try:
                 assert os.path.exists(angle_pot_file)
