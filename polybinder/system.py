@@ -830,6 +830,7 @@ def build_molecule(molecule, length, sequence, para_weight, smiles=False):
                     point_on_z_axis=para[0],
                     point_on_zx_plane=para[-1]
             )
+            para.rotate(theta=90.0, around=[0,0,1])
             if "M" in monomer_sequence:
                 meta = mb.load(os.path.join(COMPOUND_DIR, mol_dict["meta_file"]))
                 mb.z_axis_transform(
@@ -838,9 +839,9 @@ def build_molecule(molecule, length, sequence, para_weight, smiles=False):
                         point_on_z_axis=meta[0],
                         point_on_zx_plane=meta[-1]
                 )
+                meta.rotate(theta=90.0, around=[0,0,1])
         except KeyError:
             print("No file is available for this compound")
-
     if len(set(monomer_sequence)) == 2: # Copolymer
         compound.add_monomer(
                 meta,
