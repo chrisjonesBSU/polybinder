@@ -386,7 +386,7 @@ class Initializer:
                     pass
             layer.translate((b*i, 0, 0))
             crystal.add(layer)
-
+        #crystal.rotate(theta=39, around=[1, 0, 0])
         bounding_box = np.array(crystal.get_boundingbox().lengths)
         target_z = bounding_box[-1] * z_adjust
         self.set_target_box(z_constraint=target_z)
@@ -874,6 +874,13 @@ def build_molecule(molecule, length, sequence, para_weight, smiles=False):
             )
 
     compound.build(n=1, sequence=monomer_sequence, add_hydrogens=True)
+    mb.z_axis_transform(
+            compound=compound,
+            new_origin=[0,0,0],
+            point_on_z_axis=compound[0],
+            point_on_zx_plane=compound[-1]
+    )
+    compound.rotate(around=[1,0,0], theta=0.33)
     return compound, monomer_sequence
 
 
