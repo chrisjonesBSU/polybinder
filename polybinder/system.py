@@ -377,8 +377,6 @@ class Initializer:
                 try:
                     comp_1 = self.mb_compounds[next_idx]
                     comp_2 = self.mb_compounds[next_idx+1]
-                    z_axis_transform(comp_1)
-                    z_axis_transform(comp_2)
                     translate_by = np.array(vector)*(b, a, 0)
                     comp_2.translate(translate_by)
                     unit_cell= mb.Compound(subcompounds=[comp_1, comp_2])
@@ -827,8 +825,22 @@ def build_molecule(molecule, length, sequence, para_weight, smiles=False):
     else:
         try:
             para = mb.load(os.path.join(COMPOUND_DIR, mol_dict["para_file"]))
+            mb.z_axis_transform(
+                    compound=para,
+                    new_origin=[0,0,0],
+                    point_on_z_axis=para[0],
+                    point_on_zx_plane=para[-1]
+            )
+            para.rotate(theta=np.pi/2, around=[0,0,1])
             if "M" in monomer_sequence:
                 meta = mb.load(os.path.join(COMPOUND_DIR, mol_dict["meta_file"]))
+                mb.z_axis_transform(
+                        compound=meta,
+                        new_origin=[0,0,0],
+                        point_on_z_axis=meta[0],
+                        point_on_zx_plane=meta[-1]
+                )
+                meta.rotate(theta=np.pi/2, around=[0,0,1])
         except KeyError:
             print("No file is available for this compound")
 
@@ -864,6 +876,13 @@ def build_molecule(molecule, length, sequence, para_weight, smiles=False):
             )
 
     compound.build(n=1, sequence=monomer_sequence, add_hydrogens=True)
+    mb.z_axis_transform(
+            compound=compound,
+            new_origin=[0,0,0],
+            point_on_z_axis=compound[0],
+            point_on_zx_plane=compound[-1]
+    )
+    compound.rotate(theta=0.72, around=[1,0,0])
     return compound, monomer_sequence
 
 
