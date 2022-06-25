@@ -879,7 +879,7 @@ def build_molecule(molecule, length, sequence, para_weight, smiles=False):
             point_on_z_axis=compound[0],
             point_on_zx_plane=compound[-1]
     )
-    compound.rotate(around=[1,0,0], theta=0.72)
+    compound.rotate(around=[1,0,0], theta=0.33)
     return compound, monomer_sequence
 
 
