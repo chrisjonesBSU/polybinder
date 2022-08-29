@@ -6,6 +6,10 @@ import pytest
 
 
 class TestSimulate(BaseTest):
+    def test_e_factor(self, pps_system_charges):
+        simulation = simulate.Simulation(pps_system_charges, e_factor=0.50)
+        simulation.quench(kT=2.0, n_steps=1e3) 
+                
     def test_charges_sim(self, pps_system_charges):
         simulation = simulate.Simulation(
                 pps_system_charges,
