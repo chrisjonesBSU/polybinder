@@ -432,6 +432,7 @@ class Initializer:
     def carbon_fiber(self, x, y, n_layers, expand_factor=3):
         """
         """
+        # Build up the graphene layer compound
         spacings = [0.425, 0.246, 0.35]
         angles = [90, 90, 90]
         points = [[1/6,0,0],[1/2,0,0],[0, 0.5, 0],[2/3, 1/2, 0]]
@@ -446,23 +447,18 @@ class Initializer:
         )
         fiber.freud_generate_bonds("_cf", "_cf", dmin=0.14, dmax=0.145)
         fiber_box = fiber.get_boundingbox()
+        # The fiber dimensions determine box X and Y values
+        # Use these as constraints to find the Z value needed for goal density
         self.set_target_box(
-                x_constraint=fiber_box.Lx, y_constraint=fiber_box.Ly
+                x_constraint=fiber_box.Lx + 0.2, y_constraint=fiber_box.Ly + 0.2
+        )
+        # Create box filled with polymer chains
+        pack_box = mb.box.Box(
+                [fiber_box.Lx + 0.2, fiber_box.Ly + 0.2, self.target_box[2]*expand_factor]
         )
         # Adjust target box z-value to account for fiber thickness
         self.target_box[2] += fiber_box.Lz
-        # Create box filled with polymer chains
-        pack_box = mb.box.Box(
-                [fiber_box.Lx, fiber_box.Ly, self.target_box[2]*expand_factor]
-        )
-        polymers = mb.fill_box(
-                compound=self.mb_compounds,
-                n_compounds=[1 for i in self.mb_compounds],
-                box=pack_box,
-                edge=0.5,
-        )
-        # Combine polymers and fiber
-        shift_by = polymers.get_boundingbox().Lz/2 + fiber_box.Lz - 5.0
+        # Create system compound that will hold both fibers and chains
         system = mb.Compound()
         system.box = mb.box.Box(
                 [
@@ -471,31 +467,46 @@ class Initializer:
                     pack_box.Lz + fiber_box.Lz + spacings[-1]*2
                 ]
         )
+        # Center the fiber layers in x and y, place at bottom of box
+        fiber.translate_to([0,0,0])
+        fiber.translate(
+            [system.box.Lx/2, system.box.Ly/2, fiber_box.Lz/2+0.2]
+        )
+
+        # Create Compound of a box of polymers
+        polymers = mb.fill_region(
+                compound=self.mb_compounds,
+                n_compounds=[1 for i in self.mb_compounds],
+                region=system.box,
+                fix_orientation=False,
+                bounds=[[
+                    0, 0, fiber_box.Lz + 1,
+                    system.box.Lx, system.box.Ly, system.box.Lz - 0.2
+                ]]
+        )
+        #polymers = mb.fill_box(
+        #        compound=self.mb_compounds,
+        #        n_compounds=[1 for i in self.mb_compounds],
+        #        fix_orientation=False,
+        #        box=pack_box,
+        #        edge=0.5,
+        #)
+        # Combine polymers and fiber
+        shift_by = polymers.get_boundingbox().Lz/2 + fiber_box.Lz + 2.0
         system.add(fiber)
         system.add(polymers)
-        fiber.translate_to([0,0,0])
-        polymers.translate_to([0,0,0])
-        fiber.translate(
-            [
-                system.box.Lx/2,
-                system.box.Ly/2,
-                fiber_box.Lz/2
-            ]
-        )
-        polymers.translate(
-            [
-                system.box.Lx/2,
-                system.box.Ly/2,
-                system.box.Lz / 2 + (shift_by)
-            ]
-        )
+        #polymers.translate_to([0,0,0])
+        # Translate system of chains above fiber layers
+        #polymers.translate(
+        #    [system.box.Lx/2, system.box.Ly/2, system.box.Lz/2 + (shift_by)]
+        #)
         if self.forcefield or self.cg_compounds:
             self._load_parmed_structure(untyped_system=system)
             if self.remove_hydrogens:
                 self._remove_hydrogens()
         else:
             self.system = system 
-        self.system_type = "carbon fiber"
+        self.system_type = "carbonfiber"
     
     def coarse_grain_system(
             self, use_monomers=False, use_components=False, bead_mapping=None,
