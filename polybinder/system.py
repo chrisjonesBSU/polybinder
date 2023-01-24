@@ -462,7 +462,7 @@ class Initializer:
                 edge=0.5,
         )
         # Combine polymers and fiber
-        shift_by = polymers.get_boundingbox().Lz/2 + fiber_box.Lz + 1.0
+        shift_by = polymers.get_boundingbox().Lz/2 + fiber_box.Lz - 5.0
         system = mb.Compound()
         system.box = mb.box.Box(
                 [
@@ -486,7 +486,7 @@ class Initializer:
             [
                 system.box.Lx/2,
                 system.box.Ly/2,
-                shift_by
+                system.box.Lz / 2 + (shift_by)
             ]
         )
         if self.forcefield or self.cg_compounds:
