@@ -450,7 +450,7 @@ class Initializer:
         # The fiber dimensions determine box X and Y values
         # Use these as constraints to find the Z value needed for goal density
         self.set_target_box(
-                x_constraint=fiber_box.Lx + 0.2, y_constraint=fiber_box.Ly + 0.2
+                x_constraint=fiber_box.Lx + 0.35, y_constraint=fiber_box.Ly + 0.35
         )
         # Create box filled with polymer chains
         pack_box = mb.box.Box(
@@ -486,7 +486,6 @@ class Initializer:
                 bounds = [packing_bounds for i in self.mb_compounds]
         )
         # Combine polymers and fiber
-        shift_by = polymers.get_boundingbox().Lz/2 + fiber_box.Lz + 2.0
         system.add(fiber)
         system.add(polymers)
 
