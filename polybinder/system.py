@@ -474,32 +474,22 @@ class Initializer:
         )
 
         # Create Compound of a box of polymers
+        packing_bounds = [
+                0, 0, fiber_box.Lz+1.0,
+                system.box.Lx-0.2, system.box.Ly-0.2, system.box.Lz-0.2
+        ]
         polymers = mb.fill_region(
                 compound=self.mb_compounds,
                 n_compounds=[1 for i in self.mb_compounds],
                 region=system.box,
                 fix_orientation=False,
-                bounds=[[
-                    0, 0, fiber_box.Lz + 1,
-                    system.box.Lx, system.box.Ly, system.box.Lz - 0.2
-                ]]
+                bounds = [packing_bounds for i in self.mb_compounds]
         )
-        #polymers = mb.fill_box(
-        #        compound=self.mb_compounds,
-        #        n_compounds=[1 for i in self.mb_compounds],
-        #        fix_orientation=False,
-        #        box=pack_box,
-        #        edge=0.5,
-        #)
         # Combine polymers and fiber
         shift_by = polymers.get_boundingbox().Lz/2 + fiber_box.Lz + 2.0
         system.add(fiber)
         system.add(polymers)
-        #polymers.translate_to([0,0,0])
-        # Translate system of chains above fiber layers
-        #polymers.translate(
-        #    [system.box.Lx/2, system.box.Ly/2, system.box.Lz/2 + (shift_by)]
-        #)
+
         if self.forcefield or self.cg_compounds:
             self._load_parmed_structure(untyped_system=system)
             if self.remove_hydrogens:
