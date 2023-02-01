@@ -225,6 +225,13 @@ class Simulation:
         self.integrator = hoomd.md.Integrator(dt=self.dt)
         self.integrator.forces = self.forcefield
         self.sim.operations.add(self.integrator)
+        if system.system_type == "carbonfiber":
+            cf_particles = hoomd.filter.Type(types=["cf"])
+            self.integrate_group = hoomd.filter.SetDifference(
+                    hoomd.filter.All(), cf_particles
+            )
+        else:
+            self.integrate_group = hoomd.filter.All() 
 
     def temp_ramp(
             self,
@@ -250,7 +257,7 @@ class Simulation:
             )
         if pressure: # Set up NPT Integrator
             self.integrator_method = hoomd.md.methods.NPT(
-                    filter=self._all,
+                    filter=self.integrate_group,
                     kT=_temp_ramp,
                     tau=self.tau_kt,
                     S=pressure,
@@ -263,12 +270,14 @@ class Simulation:
                 self.sim.operations.integrator.methods[0].kT = _temp_ramp
             else:
                 self.integrator_method = hoomd.md.methods.NVT(
-                    filter=self._all, kT=_temp_ramp, tau=self.tau_kt
+                    filter=self.integrate_group, kT=_temp_ramp, tau=self.tau_kt
                 )
                 self.sim.operations.integrator.methods = [
                         self.integrator_method
                 ]
-        self.sim.state.thermalize_particle_momenta(filter=self._all, kT=kT_init)
+        self.sim.state.thermalize_particle_momenta(
+                filter=self.integrate_group, kT=kT_init
+        )
 
         try:
             current_timestep = self.sim.timestep
@@ -334,11 +343,11 @@ class Simulation:
                 t_ramp=int(n_steps)
         )
         self.integrator_method = hoomd.md.methods.NVT(
-                filter=self._all, kT=_temp_ramp, tau=self.tau_kt
+                filter=self.integrate_group, kT=_temp_ramp, tau=self.tau_kt
         )
         self.sim.operations.integrator.methods = [self.integrator_method]
         self.sim.state.thermalize_particle_momenta(
-                filter=self._all, kT=kT_init
+                filter=self.integrate_group, kT=kT_init
         )
 
         # Set up box shrinking ramp
@@ -408,7 +417,7 @@ class Simulation:
             )
         if pressure: # Set up NPT Integrator
             self.integrator_method = hoomd.md.methods.NPT(
-                    filter=self._all,
+                    filter=self.integrate_group,
                     kT=kT,
                     tau=self.tau_kt,
                     S=pressure,
@@ -421,12 +430,14 @@ class Simulation:
                 self.sim.operations.integrator.methods[0].kT = kT
             else:
                 self.integrator_method = hoomd.md.methods.NVT(
-                    filter=self._all, kT=kT, tau=self.tau_kt
+                    filter=self.integrate_group, kT=kT, tau=self.tau_kt
                 )
                 self.sim.operations.integrator.methods = [
                         self.integrator_method
                 ]
-        self.sim.state.thermalize_particle_momenta(filter=self._all, kT=kT)
+        self.sim.state.thermalize_particle_momenta(
+                filter=self.integrate_group, kT=kT
+        )
 
         try:
             current_timestep = self.sim.timestep
@@ -487,7 +498,7 @@ class Simulation:
 
         if pressure: # Set up NPT Integrator
             self.integrator_method = hoomd.md.methods.NPT(
-                    filter=self._all,
+                    filter=self.integrate_group,
                     kT=kT_init,
                     tau=self.tau_kt,
                     S=pressure,
@@ -498,7 +509,7 @@ class Simulation:
         else: # Add NVT integrator if not already set up
             if not self.ran_shrink:
                 self.integrator_method = hoomd.md.methods.NVT(
-                    filter=self._all, kT=kT_init, tau=self.tau_kt
+                    filter=self.integrate_group, kT=kT_init, tau=self.tau_kt
                 )
                 self.sim.operations.integrator.methods = [
                         self.integrator_method
@@ -506,7 +517,9 @@ class Simulation:
 
         for kT in schedule:
             self.sim.operations.integrator.methods[0].kT = kT
-            self.sim.state.thermalize_particle_momenta(filter=self._all, kT=kT)
+            self.sim.state.thermalize_particle_momenta(
+                    filter=self.integrate_group, kT=kT
+            )
             n_steps = schedule[kT]
             self.sim.run(n_steps)
 
