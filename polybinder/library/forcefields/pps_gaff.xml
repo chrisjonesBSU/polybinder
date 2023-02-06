@@ -1,0 +1,48 @@
+<ForceField name="GAFF" version="" combining_rule="geometric">
+	<AtomTypes>
+		<Type name="hs" class="hs" element="H" mass="1.008" def="HS" desc="Hydrogen bonded to sulphur" overrides=""/>
+		<Type name="ha" class="ha" element="H" mass="1.008" def="H[C;!X4]" desc="H bonded to aromatic carbon" overrides=""/>
+		<Type name="sh" class="sh" element="S" mass="32.06" def="[S]H" desc="Sp3 S connected with hydrogen" overrides=""/>
+		<Type name="ca" class="ca" element="C" mass="12.011" def="[C;X3;r6]1[C&X3,N&X2,P&X2][C&X3,N&X2,P&X2][C&X3,N&X2,P&X2][C&X3,N&X2,P&X2][C&X3,N&X2,P&X2]1" desc="Sp2 C in pure aromatic systems" overrides=""/>
+		<Type name="ss" class="ss" element="S" mass="32.06" def="[S;X2]([C,S,O])[C,S,O]" desc="Sp3 S in thio-ester and thio-ether" overrides=""/>
+	</AtomTypes>
+	<HarmonicBondForce>
+		<Bond class1="ca" class2="ca" length="0.13984000000000002" k="385848.4799999999"/>
+		<Bond class1="ha" class2="ca" length="0.10860000000000002" k="289365.44"/>
+		<Bond class1="sh" class2="ca" length="0.17809" k="208865.27999999994"/>
+		<Bond class1="ss" class2="ca" length="0.17806" k="209032.63999999998"/>
+		<Bond class1="ca" class2="ss" length="0.17806" k="209032.63999999998"/>
+		<Bond class1="hs" class2="sh" length="0.13473" k="244261.91999999995"/>
+	</HarmonicBondForce>
+	<HarmonicAngleForce>
+		<Angle class1="ca" class2="ca" class3="ss" angle="2.0954422999443922" k="515.4688"/>
+		<Angle class1="ss" class2="ca" class3="ca" angle="2.0954422999443922" k="515.4688"/>
+		<Angle class1="ca" class2="ca" class3="ha" angle="2.092300707290802" k="403.33760000000007"/>
+		<Angle class1="sh" class2="ca" class3="ca" angle="2.1254619630786946" k="511.2848"/>
+		<Angle class1="ca" class2="sh" class3="hs" angle="1.6667894356545847" k="384.928"/>
+		<Angle class1="ca" class2="ca" class3="sh" angle="2.1254619630786946" k="511.2848"/>
+		<Angle class1="ca" class2="ca" class3="ca" angle="2.094744168243594" k="557.3088"/>
+		<Angle class1="ca" class2="ss" class3="ca" angle="1.7249088997459958" k="522.1632"/>
+	</HarmonicAngleForce>
+	<PeriodicTorsionForce>
+		<Proper class1="ca" class2="ca" class3="ss" class4="ca" periodicity1="2" k1="1.6736000000000002" phase1="3.141592653589793" periodicity2="0" k2="0" phase2="0" periodicity3="0" k3="0" phase3="0" periodicity4="0" k4="0" phase4="0"/>
+		<Proper class1="ha" class2="ca" class3="ca" class4="ha" periodicity1="2" k1="15.167" phase1="3.141592653589793" periodicity2="0" k2="0" phase2="0" periodicity3="0" k3="0" phase3="0" periodicity4="0" k4="0" phase4="0"/>
+		<Proper class1="sh" class2="ca" class3="ca" class4="ha" periodicity1="2" k1="15.167" phase1="3.141592653589793" periodicity2="0" k2="0" phase2="0" periodicity3="0" k3="0" phase3="0" periodicity4="0" k4="0" phase4="0"/>
+		<Proper class1="ca" class2="ca" class3="ca" class4="sh" periodicity1="2" k1="15.167" phase1="3.141592653589793" periodicity2="0" k2="0" phase2="0" periodicity3="0" k3="0" phase3="0" periodicity4="0" k4="0" phase4="0"/>
+		<Proper class1="ca" class2="ca" class3="ca" class4="ca" periodicity1="2" k1="15.167" phase1="3.141592653589793" periodicity2="0" k2="0" phase2="0" periodicity3="0" k3="0" phase3="0" periodicity4="0" k4="0" phase4="0"/>
+		<Proper class1="sh" class2="ca" class3="ca" class4="ca" periodicity1="2" k1="15.167" phase1="3.141592653589793" periodicity2="0" k2="0" phase2="0" periodicity3="0" k3="0" phase3="0" periodicity4="0" k4="0" phase4="0"/>
+		<Proper class1="ca" class2="ss" class3="ca" class4="ca" periodicity1="2" k1="1.6736000000000002" phase1="3.141592653589793" periodicity2="0" k2="0" phase2="0" periodicity3="0" k3="0" phase3="0" periodicity4="0" k4="0" phase4="0"/>
+		<Proper class1="ss" class2="ca" class3="ca" class4="ca" periodicity1="2" k1="15.167" phase1="3.141592653589793" periodicity2="0" k2="0" phase2="0" periodicity3="0" k3="0" phase3="0" periodicity4="0" k4="0" phase4="0"/>
+		<Proper class1="ca" class2="ca" class3="ca" class4="ss" periodicity1="2" k1="15.167" phase1="3.141592653589793" periodicity2="0" k2="0" phase2="0" periodicity3="0" k3="0" phase3="0" periodicity4="0" k4="0" phase4="0"/>
+		<Proper class1="ca" class2="ca" class3="ca" class4="ha" periodicity1="2" k1="15.167" phase1="3.141592653589793" periodicity2="0" k2="0" phase2="0" periodicity3="0" k3="0" phase3="0" periodicity4="0" k4="0" phase4="0"/>
+		<Proper class1="ss" class2="ca" class3="ca" class4="ha" periodicity1="2" k1="15.167" phase1="3.141592653589793" periodicity2="0" k2="0" phase2="0" periodicity3="0" k3="0" phase3="0" periodicity4="0" k4="0" phase4="0"/>
+		<Proper class1="ca" class2="ca" class3="sh" class4="hs" periodicity1="2" k1="5.167" phase1="3.141592653589793" periodicity2="0" k2="0" phase2="0" periodicity3="0" k3="0" phase3="0" periodicity4="0" k4="0" phase4="0"/>
+	</PeriodicTorsionForce>
+	<NonbondedForce coulomb14scale="0.833333333" lj14scale="0.5">
+		<Atom type="hs" charge="0.0" sigma="0.10690784617684071" epsilon="0.06568879999999999"/>
+		<Atom type="ha" charge="0.0" sigma="0.259964245953351" epsilon="0.06276"/>
+		<Atom type="sh" charge="0.0" sigma="0.35635948725613575" epsilon="1.046"/>
+		<Atom type="ca" charge="0.0" sigma="0.33996695084235345" epsilon="0.359824"/>
+		<Atom type="ss" charge="0.0" sigma="0.35635948725613575" epsilon="1.046"/>
+	</NonbondedForce>
+</ForceField>
