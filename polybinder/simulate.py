@@ -255,7 +255,7 @@ class Simulation:
                     tau=self.tau_kt,
                     S=pressure,
                     tauS=self.tau_p,
-                    couple="none"
+                    couple="xyz"
             )
             self.sim.operations.integrator.methods = [self.integrator_method]
         else: # Set up (or update) NVT integrator
@@ -413,7 +413,7 @@ class Simulation:
                     tau=self.tau_kt,
                     S=pressure,
                     tauS=self.tau_p,
-                    couple="none"
+                    couple="xyz"
             )
             self.sim.operations.integrator.methods = [self.integrator_method]
         else: # Set up (or update) NVT integrator
@@ -492,7 +492,7 @@ class Simulation:
                     tau=self.tau_kt,
                     S=pressure,
                     tauS=self.tau_p,
-                    couple="none"
+                    couple="xyz"
             )
             self.sim.operations.integrator.methods = [self.integrator_method]
         else: # Add NVT integrator if not already set up
