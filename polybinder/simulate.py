@@ -657,7 +657,9 @@ class Simulation:
             self,
             ekk_weight,
             kek_weight,
-            dihedral_kwargs,
+            bond_kwargs=None,
+            angle_kwargs=None,
+            dihedral_kwargs=None,
             nlist_exclusions=("bond", "1-3", "1-4")
     ):
         """Creates needed hoomd objects for coarse-grained simulations.
@@ -701,76 +703,90 @@ class Simulation:
             pair_table.r_cut[tuple(sorted(pair))] = r_cut
 
         # Repeat same process for Bonds
-        bonds = []
-        bond_pot_files = []
-        bond_pot_widths = []
-        for bond in init_snap.bonds.types:
-            fname = f"{bond}_bond.txt"
-            bond_pot_file = f"{self.cg_ff_path}/{fname}"
-            try:
-                assert os.path.exists(bond_pot_file)
-            except AssertionError:
+        if not bond_kwargs:
+            bonds = []
+            bond_pot_files = []
+            bond_pot_widths = []
+            for bond in init_snap.bonds.types:
+                fname = f"{bond}_bond.txt"
+                bond_pot_file = f"{self.cg_ff_path}/{fname}"
+                try:
+                    assert os.path.exists(bond_pot_file)
+                except AssertionError:
+                    raise RuntimeError(
+                        f"The potential file {bond_pot_file} "
+                        f"for bond {bond} does not exist in {self.cg_ff_path}."
+                    )
+                bonds.append(bond)
+                bond_pot_files.append(bond_pot_file)
+                bond_pot_widths.append(len(np.loadtxt(bond_pot_file)[:,0]))
+
+            if not all([i == bond_pot_widths[0] for i in bond_pot_widths]):
                 raise RuntimeError(
-                    f"The potential file {bond_pot_file} "
-                    f"for bond {bond} does not exist in {self.cg_ff_path}."
+                    "All bond potential files must have the same length"
                 )
-            bonds.append(bond)
-            bond_pot_files.append(bond_pot_file)
-            bond_pot_widths.append(len(np.loadtxt(bond_pot_file)[:,0]))
 
-        if not all([i == bond_pot_widths[0] for i in bond_pot_widths]):
-            raise RuntimeError(
-                "All bond potential files must have the same length"
-            )
+            bond_table = hoomd.md.bond.Table(width=bond_pot_widths[0])
+            for bond, fpath in zip(bonds, bond_pot_files):
+                bond_data = np.loadtxt(fpath)
+                r_min = bond_data[:,0][0]
+                r_max = bond_data[:,0][-1]
+                bond_table.params[bond] = dict(
+                        r_min=r_min,
+                        r_max=r_max,
+                        U=bond_data[:,1],
+                        F=bond_data[:,2]
+                )
+        else:
+            harmonic_bond = hoomd.md.bond.Harmonic()
+            for bond in init_snap.bond.types:
+                harmonic_bond.params[bond] = bond_kwargs[bond]
 
-        bond_table = hoomd.md.bond.Table(width=bond_pot_widths[0])
-        for bond, fpath in zip(bonds, bond_pot_files):
-            bond_data = np.loadtxt(fpath)
-            r_min = bond_data[:,0][0]
-            r_max = bond_data[:,0][-1]
-            bond_table.params[bond] = dict(
-                    r_min=r_min,
-                    r_max=r_max,
-                    U=bond_data[:,1],
-                    F=bond_data[:,2]
-            )
         # Repeat same process for Angles
-        angles = []
-        angle_pot_files = []
-        angle_pot_widths = []
-        for angle in init_snap.angles.types:
-            if angle == "E-K-K":
-                fname = f"{angle}_angle_{ekk_weight}.txt"
-                angle_pot_file = f"{self.cg_ff_path}/{fname}"
-            elif angle == "K-E-K":
-                fname = f"{angle}_angle_{kek_weight}.txt"
-                angle_pot_file = f"{self.cg_ff_path}/{fname}"
-            try:
-                assert os.path.exists(angle_pot_file)
-            except AssertionError:
+        if not angle_kwargs: # Check FF dir and load from file
+            angles = []
+            angle_pot_files = []
+            angle_pot_widths = []
+            for angle in init_snap.angles.types:
+                if angle == "E-K-K":
+                    fname = f"{angle}_angle_{ekk_weight}.txt"
+                    angle_pot_file = f"{self.cg_ff_path}/{fname}"
+                elif angle == "K-E-K":
+                    fname = f"{angle}_angle_{kek_weight}.txt"
+                    angle_pot_file = f"{self.cg_ff_path}/{fname}"
+                try:
+                    assert os.path.exists(angle_pot_file)
+                except AssertionError:
+                    raise RuntimeError(
+                        f"The potential file {angle_pot_file} "
+                        f"for angle {angle} does not exist in {self.cg_ff_path}."
+                    )
+                angles.append(angle)
+                angle_pot_files.append(angle_pot_file)
+                angle_pot_widths.append(len(np.loadtxt(angle_pot_file)[:,0]))
+
+            if not all([i == angle_pot_widths[0] for i in angle_pot_widths]):
                 raise RuntimeError(
-                    f"The potential file {angle_pot_file} "
-                    f"for angle {angle} does not exist in {self.cg_ff_path}."
+                    "All angle potential files must have the same length"
                 )
-            angles.append(angle)
-            angle_pot_files.append(angle_pot_file)
-            angle_pot_widths.append(len(np.loadtxt(angle_pot_file)[:,0]))
 
-        if not all([i == angle_pot_widths[0] for i in angle_pot_widths]):
-            raise RuntimeError(
-                "All angle potential files must have the same length"
-            )
-
-        angle_table = hoomd.md.angle.Table(width=angle_pot_widths[0])
-        for angle, fpath in zip(angles, angle_pot_files):
-            angle_data = np.loadtxt(fpath)
-            angle_table.params[angle] = dict(
-                    U=angle_data[:,1], tau=angle_data[:,2]
-            )
+            angle_table = hoomd.md.angle.Table(width=angle_pot_widths[0])
+            for angle, fpath in zip(angles, angle_pot_files):
+                angle_data = np.loadtxt(fpath)
+                angle_table.params[angle] = dict(
+                        U=angle_data[:,1], tau=angle_data[:,2]
+                )
+        else:
+            harmonic_angle = hoomd.md.angle.Harmonic()
+            for angle in init_snap.angle.types:
+                harmonic_angle.params[angle] = angle_kwargs[angle]
         # Repeat same process for Dihedrals
-        harmonic_dihedral = hoomd.md.dihedral.Harmonic()
-        for dihedral in init_snap.dihedrals.types:
-            harmonic_dihedral.params[dihedral] = dihedral_kwargs[dihedral]
+        if not dihedral_kwargs:
+            pass
+        else:
+            harmonic_dihedral = hoomd.md.dihedral.Harmonic()
+            for dihedral in init_snap.dihedrals.types:
+                harmonic_dihedral.params[dihedral] = dihedral_kwargs[dihedral]
 
         hoomd_forces = [
                 pair_table,
