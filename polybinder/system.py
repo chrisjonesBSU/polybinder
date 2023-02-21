@@ -176,8 +176,8 @@ class System:
         mass_sampler = mass_distribution_dict["sampler"]
         mass_distribution = mass_distribution_dict["functional_form"]
         samples = np.round(mass_sampler(n_compounds)).astype(int)
-        if len(samples[samples == 0]) > 0:
-            samples[samples == 0] = 1
+        if len(samples[samples <= 2]) > 0:
+            samples[samples <= 2] = 3 
             warn("Polymer lengths of 0 were returned from sampling. "
                 "They were replaced a length of 1"
             )
