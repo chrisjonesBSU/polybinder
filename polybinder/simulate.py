@@ -679,6 +679,8 @@ class Simulation:
             with gsd.hoomd.open(self.restart) as f:
                 init_snap = f[-1]
                 print("Simulation initialized from restart file")
+
+        hoomd_forces = []
         # Create pair table potentials
         nlist = self.nlist(buffer=0.4)
         nlist.exclusions = nlist_exclusions
@@ -701,6 +703,7 @@ class Simulation:
                     r_min=r_min, U=pair_U, F=pair_F
             )
             pair_table.r_cut[tuple(sorted(pair))] = r_cut
+        hoomd_forces.append(pair_table)
 
         # Repeat same process for Bonds
         if not bond_kwargs:
@@ -737,10 +740,12 @@ class Simulation:
                         U=bond_data[:,1],
                         F=bond_data[:,2]
                 )
+            hoomd_forces.append(bond_table)
         else:
             harmonic_bond = hoomd.md.bond.Harmonic()
-            for bond in init_snap.bond.types:
+            for bond in init_snap.bonds.types:
                 harmonic_bond.params[bond] = bond_kwargs[bond]
+            hoomd_forces.append(harmonic_bond)
 
         # Repeat same process for Angles
         if not angle_kwargs: # Check FF dir and load from file
@@ -776,10 +781,12 @@ class Simulation:
                 angle_table.params[angle] = dict(
                         U=angle_data[:,1], tau=angle_data[:,2]
                 )
+            hoomd_forces.append(angle_table)
         else:
             harmonic_angle = hoomd.md.angle.Harmonic()
             for angle in init_snap.angle.types:
                 harmonic_angle.params[angle] = angle_kwargs[angle]
+            hoomd_forces.append(harmonic_angle)
         # Repeat same process for Dihedrals
         if not dihedral_kwargs:
             pass
@@ -787,13 +794,7 @@ class Simulation:
             harmonic_dihedral = hoomd.md.dihedral.Harmonic()
             for dihedral in init_snap.dihedrals.types:
                 harmonic_dihedral.params[dihedral] = dihedral_kwargs[dihedral]
-
-        hoomd_forces = [
-                pair_table,
-                bond_table,
-                angle_table,
-                harmonic_dihedral
-        ]
+            hoomd_forces.append(harmonic_dihedral)
         return init_snap, hoomd_forces
 
     def _hoomd_walls(self, Lx, Ly, Lz):
