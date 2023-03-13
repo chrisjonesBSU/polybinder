@@ -657,8 +657,9 @@ class Simulation:
             self,
             ekk_weight,
             kek_weight,
+            bond_kwargs,
             dihedral_kwargs,
-            nlist_exclusions=("bond", "1-3", "1-4")
+            nlist_exclusions=("bond")
     ):
         """Creates needed hoomd objects for coarse-grained simulations.
 
@@ -701,38 +702,38 @@ class Simulation:
             pair_table.r_cut[tuple(sorted(pair))] = r_cut
 
         # Repeat same process for Bonds
-        bonds = []
-        bond_pot_files = []
-        bond_pot_widths = []
-        for bond in init_snap.bonds.types:
-            fname = f"{bond}_bond.txt"
-            bond_pot_file = f"{self.cg_ff_path}/{fname}"
+        dihedrals = []
+        dihedral_pot_files = []
+        dihedral_pot_widths = []
+        for dihedral in init_snap.dihedrals.types:
+            fname = f"{dihedral}_dihedral.txt"
+            dihedral_pot_file = f"{self.cg_ff_path}/{fname}"
             try:
-                assert os.path.exists(bond_pot_file)
+                assert os.path.exists(dihedral_pot_file)
             except AssertionError:
                 raise RuntimeError(
-                    f"The potential file {bond_pot_file} "
-                    f"for bond {bond} does not exist in {self.cg_ff_path}."
+                    f"The potential file {dihedral_pot_file} "
+                    f"for bond {dihedral} does not exist in {self.cg_ff_path}."
                 )
-            bonds.append(bond)
-            bond_pot_files.append(bond_pot_file)
-            bond_pot_widths.append(len(np.loadtxt(bond_pot_file)[:,0]))
+            dihedrals.append(dihedral)
+            dihedral_pot_files.append(dihedral_pot_file)
+            dihedral_pot_widths.append(len(np.loadtxt(dihedral_pot_file)[:,0]))
 
-        if not all([i == bond_pot_widths[0] for i in bond_pot_widths]):
+        if not all([i == dihedral_pot_widths[0] for i in dihedral_pot_widths]):
             raise RuntimeError(
-                "All bond potential files must have the same length"
+                "All dihedral potential files must have the same length"
             )
 
-        bond_table = hoomd.md.bond.Table(width=bond_pot_widths[0])
-        for bond, fpath in zip(bonds, bond_pot_files):
-            bond_data = np.loadtxt(fpath)
-            r_min = bond_data[:,0][0]
-            r_max = bond_data[:,0][-1]
-            bond_table.params[bond] = dict(
+        dihedral_table = hoomd.md.dihedral.Table(width=dihedral_pot_widths[0])
+        for dihedral, fpath in zip(dihedrals, dihedral_pot_files):
+            dihedral_data = np.loadtxt(fpath)
+            r_min = dihedral_data[:,0][0]
+            r_max = dihedral_data[:,0][-1]
+            dihedral_table.params[dihedral] = dict(
                     r_min=r_min,
                     r_max=r_max,
-                    U=bond_data[:,1],
-                    F=bond_data[:,2]
+                    U=dihedral_data[:,1],
+                    F=dihedral_data[:,2]
             )
         # Repeat same process for Angles
         angles = []
@@ -768,15 +769,18 @@ class Simulation:
                     U=angle_data[:,1], tau=angle_data[:,2]
             )
         # Repeat same process for Dihedrals
-        harmonic_dihedral = hoomd.md.dihedral.Harmonic()
+        harmonic_bond = hoomd.md.bond.Harmonic()
         for dihedral in init_snap.dihedrals.types:
-            harmonic_dihedral.params[dihedral] = dihedral_kwargs[dihedral]
+        for bond in init_snap.bonds.types:
+            harmonic_bond.params[bond] = bond_kwargs[bond]
 
         hoomd_forces = [
                 pair_table,
-                bond_table,
+                harmonic_bond,
+                #bond_table,
                 angle_table,
-                harmonic_dihedral
+                dihedral_table,
+                #harmonic_dihedral
         ]
         return init_snap, hoomd_forces
 
