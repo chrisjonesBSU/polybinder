@@ -727,13 +727,9 @@ class Simulation:
         dihedral_table = hoomd.md.dihedral.Table(width=dihedral_pot_widths[0])
         for dihedral, fpath in zip(dihedrals, dihedral_pot_files):
             dihedral_data = np.loadtxt(fpath)
-            r_min = dihedral_data[:,0][0]
-            r_max = dihedral_data[:,0][-1]
             dihedral_table.params[dihedral] = dict(
-                    r_min=r_min,
-                    r_max=r_max,
                     U=dihedral_data[:,1],
-                    F=dihedral_data[:,2]
+                    tau=dihedral_data[:,2]
             )
         # Repeat same process for Angles
         angles = []
