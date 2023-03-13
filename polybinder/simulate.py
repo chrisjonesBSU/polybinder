@@ -658,7 +658,7 @@ class Simulation:
             ekk_weight,
             kek_weight,
             bond_kwargs,
-            dihedral_kwargs,
+            #dihedral_kwargs,
             nlist_exclusions=("bond")
     ):
         """Creates needed hoomd objects for coarse-grained simulations.
@@ -770,7 +770,6 @@ class Simulation:
             )
         # Repeat same process for Dihedrals
         harmonic_bond = hoomd.md.bond.Harmonic()
-        for dihedral in init_snap.dihedrals.types:
         for bond in init_snap.bonds.types:
             harmonic_bond.params[bond] = bond_kwargs[bond]
 
