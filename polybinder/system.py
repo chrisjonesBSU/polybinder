@@ -278,7 +278,7 @@ class Initializer:
             self.pmd_pickle_path = None
 
         self.mb_compounds = self._generate_compounds()
-        self.cg_compounds = [] 
+        self.cg_compounds = []
 
     def pack(self, expand_factor=7):
         """Uses PACKMOL via mBuild to randomlly fill a box
@@ -335,7 +335,7 @@ class Initializer:
             comp.translate(np.array([0,0,separation])*idx)
             system.add(comp)
 
-        system.box = mb.box.Box(self.target_box)
+        system.box = mb.box.Box(self.target_box * 1.20)
         # Center the chains in the box
         system.translate_to((
             system.box.Lx / 2,
@@ -428,7 +428,7 @@ class Initializer:
         else:
             self.system = crystal
         self.system_type = "crystal"
-    
+
     def coarse_grain_system(
             self, use_monomers=False, use_components=False, bead_mapping=None,
 
@@ -625,7 +625,7 @@ class Initializer:
             self.system = pickle.load(f)
             f.close()
         elif not self.cg_compounds:
-            # Apply a forcefield to an atomistic system 
+            # Apply a forcefield to an atomistic system
             self.system = self._apply_ff(untyped_system)
             if self.pmd_pickle_path:
                 f = open(self.pmd_pickle_path, "wb")
@@ -693,7 +693,7 @@ class Fused:
                 system_mb.box.Ly / 2,
                 system_mb.box.Lz / 2,]
         )
-        
+
         if not coarse_grain:
             ff_path = f"{FF_DIR}/{self.forcefield}-nosmarts.xml"
             forcefield = foyer.Forcefield(forcefield_files=ff_path)
@@ -882,7 +882,7 @@ def _gsd_to_mbuild(
     particle_dict = {}
     for idx, particle in enumerate(comp.particles()):
         particle_dict[idx] = particle
-    
+
     bonds = [(i, j) for (i, j) in snap.bonds.group]
     for (i, j) in bonds:
         atom1 = particle_dict[i]
