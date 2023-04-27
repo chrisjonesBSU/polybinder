@@ -733,7 +733,7 @@ class Simulation:
                 bond_data = np.loadtxt(fpath)
                 bond_force.params[bond] = dict(
                         U=bond_data[:,1],
-                        tau=bond_data[:,2]
+                        F=bond_data[:,2]
                 )
         else:
             bond_force = hoomd.md.bond.Harmonic()
