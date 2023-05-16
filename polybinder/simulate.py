@@ -386,7 +386,7 @@ class Simulation:
         if tree_nlist and isinstance(self.nlist, hoomd.md.nlist.Cell):
             self.sim.operations.integrator.forces[0].nlist = original_nlist
 
-    def quench(self, n_steps, kT=None, pressure=None):
+    def quench(self, n_steps, kT=None, pressure=None, couple="none"):
         """Runs an NVT or NPT simulation at a single temperature
         and/or pressure.
 
@@ -413,7 +413,7 @@ class Simulation:
                     tau=self.tau_kt,
                     S=pressure,
                     tauS=self.tau_p,
-                    couple="none"
+                    couple=couple
             )
             self.sim.operations.integrator.methods = [self.integrator_method]
         else: # Set up (or update) NVT integrator
@@ -454,6 +454,7 @@ class Simulation:
         pressure=None,
         step_sequence=None,
         schedule=None,
+        couple="none"
     ):
         """Runs a simulation through a series of temperatures in the
         NVT or NPT ensemble.
@@ -492,7 +493,7 @@ class Simulation:
                     tau=self.tau_kt,
                     S=pressure,
                     tauS=self.tau_p,
-                    couple="none"
+                    couple=couple
             )
             self.sim.operations.integrator.methods = [self.integrator_method]
         else: # Add NVT integrator if not already set up
@@ -732,6 +733,8 @@ class Simulation:
             for bond, fpath in zip(bonds, bond_pot_files):
                 bond_data = np.loadtxt(fpath)
                 bond_force.params[bond] = dict(
+                        r_min=bond_data[:,0][0],
+                        r_max=bond_data[:,0][-1],
                         U=bond_data[:,1],
                         F=bond_data[:,2]
                 )
