@@ -2,6 +2,7 @@ from itertools import combinations_with_replacement as combo
 import operator
 import os
 
+from utils.bond_chains import bond_self_chains
 import gsd.hoomd
 import hoomd
 import hoomd.md
@@ -100,6 +101,7 @@ class Simulation:
         cg_potentials_dir=None,
         restart=None,
         wall_time_limit=None,
+        bond_ends=False,
         **kwargs,
     ):
         self.r_cut = r_cut
@@ -117,6 +119,7 @@ class Simulation:
         self.restart = restart
         self.wall_time_limit = wall_time_limit
         self.system = system.system
+        self.bond_ends = bond_ends
         self.ran_shrink = False
 
         # Coarsed-grained related parameters, system is a gsd.hoomd.Snapshot
@@ -191,6 +194,9 @@ class Simulation:
                 self.sim.create_state_from_snapshot(self.init_snap)
         else:
             self.init_snap, self.forcefield = self._create_hoomd_sim_from_snapshot(**kwargs)
+            if self.bond_ends:
+                snap = bond_self_chains(self.init_snap, 0, -1)
+                self.init_snap = snap
             self.sim.create_state_from_snapshot(self.init_snap)
 
         # Set up wall potentials
