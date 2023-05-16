@@ -2,7 +2,7 @@ from itertools import combinations_with_replacement as combo
 import operator
 import os
 
-from utils.bond_chains import bond_self_chains
+from polybinder.utils.bond_chains import bond_self_chains
 import gsd.hoomd
 import hoomd
 import hoomd.md
